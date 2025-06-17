@@ -1,28 +1,60 @@
-# this allows us to use code from
-# the open-source pygame library
-# throughout this file
+import sys
 import pygame
 from constants import *
+from player import Player
+from asteroid import Asteroid
+from asteroidfield import AsteroidField
+from shot import Shot
+
 
 def main():
-    # initialize the pygame library
     pygame.init()
-    # create a window with the specified width and height
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    # Create a game loop that runs until the user quits
-    running = True
-    while running:
-        # check for events in the event queue
+    clock = pygame.time.Clock()
+
+    updatable = pygame.sprite.Group()
+    drawable = pygame.sprite.Group()
+    asteroids = pygame.sprite.Group()
+    shots = pygame.sprite.Group()
+
+    Asteroid.containers = (asteroids, updatable, drawable)
+    Shot.containers = (shots, updatable, drawable)
+    AsteroidField.containers = updatable
+    asteroid_field = AsteroidField()
+
+    Player.containers = (updatable, drawable)
+
+    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+
+    dt = 0
+
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
-        # fill the screen with black color
-        screen.fill((0, 0, 0))
-        # update the display
+
+        updatable.update(dt)
+
+        for asteroid in asteroids:
+            if asteroid.collides_with(player):
+                print("Game over!")
+                sys.exit()
+                
+            for shot in shots:
+                if asteroid.collides_with(shot):
+                        shot.kill()         
+                        asteroid.split()
+                        
+        screen.fill("black")
+
+        for obj in drawable:
+            obj.draw(screen)
+
         pygame.display.flip()
-    print("Starting Asteroids!")
-    # print screen width and height form Constants.py
-    print(f"Screen width: {SCREEN_WIDTH}")
-    print(f"Screen height: {SCREEN_HEIGHT}")
+
+        # limit the framerate to 60 FPS
+        dt = clock.tick(60) / 1000
+
+
 if __name__ == "__main__":
     main()
